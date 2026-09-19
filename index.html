@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="1RbT5z4ybj802NMT3bYLgB">
+<head data-page-node-id="HQHtAyqXsCSFXIbwgl4A46">
+<meta charset="UTF-8" data-page-node-id="lKrOnDipgPT9rvZnoglRdf">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="pXc8OEZc2R58MXzkFlHgKk">
+<title>朕即江山 · 帝王权谋模拟器</title>
+<style>
+  :root{
+    --paper:#f6f1e4;
+    --paper2:#fffdf6;
+    --ink:#2b2118;
+    --ink2:#5d4c39;
+    --line:#cdb488;
+    --gold:#a67c2e;
+    --red:#8e2f27;
+    --green:#3f6b45;
+    --blue:#33556f;
+    --shadow:0 2px 10px rgba(80,60,30,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(180,150,90,.07), transparent 40%),
+      radial-gradient(circle at 88% 72%, rgba(140,80,60,.06), transparent 45%);
+    color:var(--ink);
+    font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif;
+    font-size:15px;
+    overflow:hidden;
+  }
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  /* ===== 顶栏 ===== */
+  header{
+    display:flex;align-items:center;gap:14px;
+    padding:10px 18px;
+    background:linear-gradient(180deg,#7d2b24,#5e1f1a);
+    color:#f7e9cf;border-bottom:3px solid var(--gold);
+    box-shadow:var(--shadow);
+  }
+  header .seal{
+    width:38px;height:38px;border:2px solid #e6cd94;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;color:#e6cd94;background:rgba(255,255,255,.06);
+  }
+  header h1{font-size:19px;margin:0;letter-spacing:3px;}
+  header .era{font-size:14px;color:#e6cd94;letter-spacing:2px;}
+  header .spacer{flex:1;}
+  header .clock{font-size:13px;color:#f0dcb4;letter-spacing:1px;text-align:right;line-height:1.5;}
+
+  /* ===== 主体三栏 ===== */
+  .main{flex:1;display:flex;min-height:0;gap:10px;padding:10px;}
+  aside,section{background:var(--paper2);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);}
+  .left{width:250px;display:flex;flex-direction:column;min-height:0;}
+  .center{flex:1;display:flex;flex-direction:column;min-height:0;}
+  .right{width:300px;display:flex;flex-direction:column;min-height:0;}
+  .box-title{
+    padding:7px 10px;font-size:14px;letter-spacing:2px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#f3e9d2,#eadfc4);
+    color:#6b3b1e;display:flex;align-items:center;justify-content:space-between;
+  }
+  .box-body{padding:10px;overflow:auto;flex:1;min-height:0;}
+
+  /* ===== 五维 ===== */
+  .stat{margin-bottom:9px;}
+  .stat .row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;}
+  .stat .val{font-weight:bold;}
+  .bar{height:9px;background:#e7ddc6;border-radius:5px;overflow:hidden;border:1px solid #ddd0ae;}
+  .bar i{display:block;height:100%;border-radius:5px;transition:width .35s ease;}
+  .tagwarn{color:var(--red);font-weight:bold;}
+  .taggood{color:var(--green);font-weight:bold;}
+
+  .kv{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed #e2d6b8;}
+  .kv:last-child{border-bottom:none;}
+
+  /* ===== 日志 ===== */
+  #log{flex:1;overflow:auto;padding:14px 16px;line-height:1.85;}
+  .ln{margin:0 0 7px;font-size:15px;}
+  .ln.narr{color:var(--ink);}
+  .ln.surf{color:#3a2f24;background:#f7f0dd;border-left:3px solid var(--gold);padding:3px 8px;border-radius:0 4px 4px 0;}
+  .ln.heart{color:#7a4b8c;font-style:italic;background:#f6eef8;border-left:3px solid #9b6bab;padding:3px 8px;border-radius:0 4px 4px 0;}
+  .ln.report{color:#4a5b46;background:#f0f4ec;border-left:3px solid #7d9a72;padding:3px 8px;border-radius:0 4px 4px 0;}
+  .ln.danger{color:var(--red);background:#fbeceb;border-left:3px solid var(--red);padding:3px 8px;border-radius:0 4px 4px 0;font-weight:bold;}
+  .ln.good{color:#2f6b40;background:#eef6ef;border-left:3px solid #2f6b40;padding:3px 8px;border-radius:0 4px 4px 0;}
+  .ln.sys{color:#8a7a5e;font-size:13px;text-align:center;border-top:1px dashed #e0d3b2;padding-top:6px;margin-top:10px;}
+  .ln.history{color:#6b4a2a;background:#f6ecd6;border:1px dashed var(--gold);padding:8px 10px;border-radius:4px;font-size:14px;}
+  .ln h4{margin:10px 0 6px;font-size:16px;color:#6b3b1e;letter-spacing:2px;}
+
+  /* ===== 人物 ===== */
+  .tabs{display:flex;border-bottom:1px solid var(--line);}
+  .tabs div{flex:1;text-align:center;padding:7px 0;font-size:13px;cursor:pointer;color:var(--ink2);}
+  .tabs div.on{background:#8e2f27;color:#f7e9cf;font-weight:bold;}
+  .pcard{
+    border:1px solid #e4d7b6;border-radius:5px;padding:7px 9px;margin-bottom:7px;
+    background:#fffdf3;cursor:pointer;transition:.15s;
+  }
+  .pcard:hover{border-color:var(--gold);background:#fdf6e4;}
+  .pcard .nm{font-size:15px;font-weight:bold;}
+  .pcard .nm small{font-weight:normal;color:var(--ink2);font-size:12px;margin-left:5px;}
+  .pcard .tr{font-size:12px;color:#7a6244;margin:2px 0;}
+  .pcard .nums{font-size:12px;color:var(--ink2);}
+  .pcard .act{font-size:12px;color:#6a5b3d;font-style:italic;margin-top:3px;}
+  .pcard.dead{opacity:.45;filter:grayscale(1);}
+  .mini{height:5px;background:#ece2c9;border-radius:3px;overflow:hidden;display:inline-block;width:52px;vertical-align:middle;margin:0 4px;}
+  .mini i{display:block;height:100%;}
+
+  /* ===== 底栏操作 ===== */
+  footer{
+    border-top:1px solid var(--line);background:linear-gradient(180deg,#f3e9d2,#e8dcc0);
+    padding:8px 12px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;
+  }
+  .btn{
+    font-family:inherit;font-size:14px;padding:6px 13px;cursor:pointer;
+    border:1px solid #b79a63;border-radius:4px;background:linear-gradient(180deg,#fffaf0,#f0e3c6);
+    color:#4a3520;transition:.15s;letter-spacing:1px;
+  }
+  .btn:hover{background:linear-gradient(180deg,#fff,#f7ecd2);border-color:var(--gold);transform:translateY(-1px);}
+  .btn.main{background:linear-gradient(180deg,#9c3730,#7d2b24);color:#f7e9cf;border-color:#5e1f1a;}
+  .btn.main:hover{background:linear-gradient(180deg,#ac4238,#8a3029);}
+  .btn.danger{border-color:#a44;color:#8e2f27;}
+  .btn.small{padding:4px 9px;font-size:13px;}
+
+  /* ===== 弹窗 ===== */
+  #modal{position:fixed;inset:0;background:rgba(30,20,10,.45);display:none;align-items:center;justify-content:center;z-index:50;}
+  #modal.show{display:flex;}
+  .mbox{
+    width:min(620px,92vw);max-height:86vh;display:flex;flex-direction:column;
+    background:var(--paper2);border:2px solid var(--gold);border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.35);
+  }
+  .mbox h3{margin:0;padding:11px 16px;background:linear-gradient(180deg,#7d2b24,#5e1f1a);color:#f7e9cf;font-size:17px;letter-spacing:3px;}
+  .mbody{padding:14px 18px;overflow:auto;font-size:15px;line-height:1.9;}
+  .mbtns{padding:10px 16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;background:#f8f1df;}
+  .opt{
+    display:block;width:100%;text-align:left;margin-bottom:8px;padding:9px 12px;
+    border:1px solid #d3c19a;border-radius:5px;background:#fffdf5;cursor:pointer;font-family:inherit;font-size:14px;line-height:1.7;
+  }
+  .opt:hover{border-color:var(--gold);background:#fdf5e2;}
+  .opt b{color:#6b3b1e;}
+  .think{border:1px solid #c0392b;border-radius:5px;padding:10px 12px;background:#fbeceb;margin-bottom:12px;}
+  .think b{color:var(--red);}
+  .think ul{margin:6px 0 0;padding-left:20px;}
+  .think li{margin:3px 0;font-size:14px;}
+  .impacts div{margin:4px 0;font-size:14px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .pl{list-style:none;padding:0;margin:0;}
+  .pl li{border:1px solid #e4d7b6;border-radius:5px;padding:7px 10px;margin-bottom:6px;background:#fffdf3;font-size:14px;cursor:pointer;}
+  .pl li:hover{border-color:var(--gold);background:#fdf6e4;}
+  .muted{color:var(--ink2);font-size:13px;}
+  .endtitle{font-size:26px;text-align:center;color:#8e2f27;letter-spacing:6px;margin:6px 0 14px;}
+  .endtext{text-align:center;font-size:16px;line-height:2;}
+
+  /* 滚动条 */
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:#d5c39a;border-radius:5px;}
+  ::-webkit-scrollbar-track{background:#f0e8d4;}
+
+  @media (max-width:1000px){
+    .left,.right{width:210px;}
+    body{font-size:14px;}
+  }
+</style>
+</head>
+<body data-page-node-id="hPS0xJGUzGcwNri43SAX1T">
+<div id="app" data-page-node-id="aJrmMl4D5c3BnOc9H6DIfe">
+  <header data-page-node-id="LNoWhKUmCOFwJt1uty9lnI">
+    <div class="seal" data-page-node-id="6oLiez4QKQNMiyJZfWbF6G">玺</div>
+    <div data-page-node-id="O9g5SJO7B9gTao7eSEwPbB">
+      <h1 id="hTitle" data-page-node-id="f8CoKHFTkrFuu3ZykNA9Yw">朕即江山</h1>
+      <div class="era" id="hEra" data-page-node-id="S2l1OHXNyBTUU21xqjNLSQ">未定年号</div>
+    </div>
+    <div class="spacer" data-page-node-id="TYpdQqh8wxMM8xoZaz2WLy"></div>
+    <div class="clock" id="hClock" data-page-node-id="7GTZM7lZns4Vr6wYOrGnB8"></div>
+  </header>
+
+  <div class="main" data-page-node-id="X8OyPUEXN4JtIWWDgy1MUx">
+    <aside class="left" data-page-node-id="LAteM7YqNWBVgdWEyjjuoF">
+      <div class="box-title" data-page-node-id="vXzdlwR8kawGLjAKtGlbJg">帝国五维</div>
+      <div class="box-body" id="statsBox" data-page-node-id="imK5bTjq59DektvYrzj6Lf"></div>
+      <div class="box-title" data-page-node-id="lkhDVTjzqTC0OZNNAnipNt">朝局概览</div>
+      <div class="box-body" id="overviewBox" style="flex:0 0 auto;max-height:190px;" data-page-node-id="5BhX5KfY4ZrT2NuNvWGUb7"></div>
+    </aside>
+
+    <section class="center" data-page-node-id="qPeaHXFhYO2dW5kkMW2A66">
+      <div class="box-title" data-page-node-id="5Umr9IrICoEFwGs19OerGu">
+        <span data-page-node-id="1ezN4MLCEjfmzi2xf20HdZ">朝堂纪事</span>
+        <span class="muted" id="turnTip" data-page-node-id="jGdpUJWxHiLYZISaqHoBmX"></span>
+      </div>
+      <div id="log" data-page-node-id="HGMdz4nP4uO7in8fxoiPNJ"></div>
+    </section>
+
+    <aside class="right" data-page-node-id="KfjeTBys0tZj8dfVqTb6HR">
+      <div class="tabs" data-page-node-id="pAMaJ1ocVAedbwVP1yMdQG">
+        <div class="on" data-tab="o" data-page-node-id="zyUrq5qkmyj6E0jgjMQQPk">朝臣</div>
+        <div data-tab="c" data-page-node-id="zBX24vbq4AyBFkFohhqmWv">后宫</div>
+        <div data-tab="p" data-page-node-id="xx0ujVsj5rwYuGSCrTjhol">皇子</div>
+        <div data-tab="a" data-page-node-id="srjQLcxLQw971WfoUoiqyX">起居注</div>
+      </div>
+      <div class="box-body" id="peopleBox" data-page-node-id="RcVruLL6kcm2nufsS6drGN"></div>
+    </aside>
+  </div>
+
+  <footer id="actions" data-page-node-id="SkvNeiotNDxPpMjbq1DGuf"></footer>
+</div>
+
+<div id="modal" data-page-node-id="Phj1CmMRPgToileoQ0a3rW"></div>
+
+<script>
+/* =========================================================
+   朕即江山 · 帝王权谋模拟器
+   单文件、零依赖、可直接在浏览器打开
+   ========================================================= */
+(function(){
+'use strict';
+
+/* ---------- 基础工具 ---------- */
+function R(a){return a[Math.floor(Math.random()*a.length)];}
+function RI(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function CL(v){return Math.max(0,Math.min(100,Math.round(v)));}
+function chance(p){return Math.random()<p;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function esc(s){return String(s).replace(/[&<>]/g,c=>c==='&'?'&amp;':(c==='<'?'&lt;':'&gt;'));}
+
+/* ---------- 名字与词库 ---------- */
+const SURNAME=('李 王 张 刘 陈 杨 赵 黄 周 吴 徐 孙 马 朱 胡 郭 何 高 林 罗 郑 梁 谢 宋 唐 许 韩 冯 邓 曹 裴 崔 卢 陆 段 薛').split(' ');
+const GIVEN_M=('忠 庸 直 衍 崇 延 靖 端 珪 璟 守仁 知远 光弼 怀恩 弘毅 承宗 世安 惟清 元礼 敬修 德昭 允文 伯温 仲卿 叔玉 季鹰 廷玉 长孺 子昂 彦深').split(' ');
+const GIVEN_F=('云裳 清婉 玉环 昭容 锦瑟 明月 素心 兰若 婉兮 慧娘 芷若 凝香 采薇 语嫣 玲珑 沉鱼 落雁 安静 柔嘉 德音').split(' ');
+const TITLES=['丞相','太尉','御史大夫','户部尚书','兵部尚书','吏部尚书','刑部尚书','工部尚书','礼部尚书','镇北大将军','内阁大学士','九门提督'];
+const TRAITS_M=['奸诈','欺君','鲁莽','板正','忠心','圆滑','贪婪','清廉','野心家'];
+const TRAITS_F=['温柔','泼辣','端庄','娇憨','心机','隐忍','善妒'];
+const RANKS=['皇后','贵妃','淑妃','德妃','贤妃','昭仪','婕妤','才人'];
+const FAMILY=('太原王氏 清河崔氏 琅琊王氏 陇西李氏 范阳卢氏 荥阳郑氏 江南沈氏 关中韦氏').split(' ');
+const SHICHEN=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SPEAK=['臣以为，此事当从长计议。','此议不妥，望陛下三思。','臣，遵旨。','此乃社稷之福。','臣斗胆进言。','边事紧急，不可拖延。','国库空虚，望陛下体恤。','臣年老昏聩，不敢妄言。','此事务必严查。','陛下圣明，臣万死难辞。'];
+const HEART=[
+ '{n}说“臣遵旨”时，喉结动了一下。',
+ '{n}奏对时，目光朝{m}那边瞟了一眼。',
+ '{n}的奏章边角有折痕，像被人反复翻开。',
+ '{n}顿了一瞬，才答“臣无异议”。',
+ '{n}袖口沾着新泥，不像从府中来的。',
+ '{n}称病告假三日，今日却气色极佳。',
+ '你注意到，{n}的手指在轻轻发抖。',
+ '{n}退下时与{m}擦肩，两人脚步同时一顿。',
+ '{n}答话时多看了你一眼，又迅速垂下。',
+ '{n}今日换了新靴，形制与禁军一般无二。'
+];
+const ACT_M=[
+ '趁你午膳时，私下召见了{m}，密谈半个时辰。',
+ '在府中宴请武将数人，至夜方散。',
+ '称病不朝，闭门谢客。',
+ '往户部调阅旧账，直到掌灯。',
+ '上了一道荐举折子，举荐门生三人。',
+ '去了一趟东市，买回两箱旧书。',
+ '与{f}宫中的太监有过接触。',
+ '在御花园拦住御驾，欲言又止。',
+ '独自在祠堂跪了半日。',
+ '派人往边关送了一封信。',
+ '在酒楼雅间，与一位陌生人同饮。',
+ '把家中细软悄悄运出了城。'
+];
+const ACT_F=[
+ '去太后宫中请安，出来后脸色阴沉。',
+ '派人往母家送了一封密信。',
+ '在御花园“偶遇”了{f2}，相谈甚欢。',
+ '打翻了御赐的汤药，无人敢问。',
+ '整日抄写佛经，不见外人。',
+ '与{n}的夫人同游了一日。',
+ '向内务府多支了三百两脂粉钱。',
+ '在宫中设小宴，只请了一位太医。'
+];
+const FOLK=[
+ '东市粮商哄抬米价，百姓怨声载道。',
+ '茶馆说书人讲了个清官被贬的段子，听者落泪。',
+ '城门外多了些流民，孩童赤足。',
+ '有童谣在巷口传唱，词里唱的是朝廷。',
+ '一书生在酒楼醉骂朝中某位大人。',
+ '米铺前排了长队，掌柜说库存只够三日。',
+ '有老兵在街头卖自己的军功牌。',
+ '新科进士们游街，围观者众，议论纷纷。'
+];
+const PLOTS=[
+ {type:'结党',need:12,label:'暗中结党'},
+ {type:'贪腐',need:8,label:'贪墨帑银'},
+ {type:'篡位',need:20,label:'密谋篡位'},
+ {type:'通敌',need:15,label:'私通外敌'},
+ {type:'拥立',need:14,label:'拥立皇子'}
+];
+
+/* ---------- 全局状态 ---------- */
+let S=null;
+let TAB='o';
+
+function newGame(era){
+  S={
+    era:era||'建极', year:1, month:1, day:1, sc:4,
+    turn:0,
+    stats:{pol:62,eco:58,peo:60,mil:55,imp:70},
+    treasury:820,
+    officials:genOfficials(RI(5,7)),
+    consorts:genConsorts(RI(3,5)),
+    princes:genPrinces(),
+    heir:null,
+    enemies:{北狄:70,南蛮:45,西羌:55},
+    log:[], annals:[], pending:[], recent:[],
+    flags:{silence:0,war:0,kill:0,beidi:false,remonstrance:0},
+    over:null
+  };
+  // 皇子生母
+  S.princes.forEach(p=>{ if(!p.mother){ const c=R(S.consorts); p.mother=c.name; c.son=p.name; } });
+}
+
+function genOfficials(n){
+  const used={},arr=[];
+  for(let i=0;i<n;i++){
+    let name;
+    do{ name=R(SURNAME)+R(GIVEN_M); }while(used[name]);
+    used[name]=1;
+    const ts=shuffle(TRAITS_M.slice()).slice(0,RI(1,2));
+    const loyal=RI(30,90), amb=RI(20,85);
+    arr.push({
+      id:'o'+i, name, title:R(TITLES), age:RI(32,68),
+      traits:ts, loyalty:loyal, ambition:amb,
+      goal:'', action:'初入朝堂，静观风向。',
+      allies:[], rivals:[], dead:false, jailed:false,
+      suspicion:0, clue:null, plot:null, faction:''
+    });
+  }
+  // 关系网
+  arr.forEach(o=>{
+    const others=arr.filter(x=>x!==o);
+    if(others.length){
+      if(chance(.6)) o.allies.push(R(others).name);
+      if(chance(.5)) o.rivals.push(R(others).name);
+    }
+    if(o.ambition>70&&!o.plot) o.plot=Object.assign({},R(PLOTS),{progress:0});
+  });
+  arr.forEach(o=>{ o.goal=genGoalM(o,arr); });
+  return arr;
+}
+function genGoalM(o,arr){
+  const g=R(['三年内升任丞相','告老还乡','贪墨白银十万两','扳倒{r}','削藩立功','结交边将','整顿吏治','拥立{p}为储','求陛下平反旧案']);
+  return g.replace('{r}', arr.filter(x=>x!==o).length?R(arr.filter(x=>x!==o)).name:'政敌')
+          .replace('{p}', R(['大皇子','二皇子','三皇子','四皇子']));
+}
+function genConsorts(n){
+  const used={},arr=[];
+  for(let i=0;i<n;i++){
+    let name;
+    do{ name=R(SURNAME)+R(GIVEN_F); }while(used[name]);
+    used[name]=1;
+    arr.push({
+      id:'c'+i, name, rank:RANKS[i]||'贵人', age:RI(17,34),
+      family:R(FAMILY), traits:shuffle(TRAITS_F.slice()).slice(0,RI(1,2)),
+      favor:RI(20,80), goal:'', action:'新得册封，尚在熟悉宫规。',
+      relation:'', son:null, dead:false
+    });
+  }
+  arr.forEach(c=>{ c.goal=genGoalF(c); c.relation=R(['父为'+R(TITLES),'兄掌禁军三千','与'+R(SURNAME)+'氏有姻亲','母族已败落']);
+  });
+  return arr;
+}
+function genGoalF(c){
+  const g=R(['扶{p}登上储位','替父兄求一官半职','扳倒皇后','固宠六宫','扩大家族势力','求陛下清查旧案','为母族翻案']);
+  return g.replace('{p}', R(['大皇子','二皇子','三皇子','四皇子']));
+}
+function genPrinces(){
+  const n=RI(2,4),arr=[];
+  for(let i=0;i<n;i++){
+    arr.push({id:'p'+i,name:['大','二','三','四'][i]+'皇子',age:RI(8,28),mother:null,support:RI(10,60)});
+  }
+  return arr;
+}
+
+/* ---------- 日志 ---------- */
+function log(text,cls){
+  if(!S) return;
+  S.log.push({t:text,c:cls||'narr'});
+  if(S.log.length>400) S.log.shift();
+}
+function renderLog(){
+  const el=document.getElementById('log');
+  el.innerHTML=S.log.map(l=>'<div class="ln '+l.c+'">'+l.t+'</div>').join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+/* ---------- 数值 ---------- */
+const STAT_META=[
+  {k:'pol',n:'🏛️ 政治稳定度',good:'朝堂和谐',bad:'政变风险'},
+  {k:'eco',n:'💰 国库充盈度',good:'可支大战',bad:'全国饥荒'},
+  {k:'peo',n:'🌾 民生幸福度',good:'百姓拥戴',bad:'民变风险'},
+  {k:'mil',n:'⚔️ 军力储备度',good:'外敌不敢犯',bad:'边疆告急'},
+  {k:'imp',n:'📜 皇权威信度',good:'令行禁止',bad:'阳奉阴违'}
+];
+function barColor(v){ return v>=70?'#3f8f4f':(v>=45?'#c99a2e':'#b03a2e'); }
+function applyEff(e){
+  if(!e) return;
+  const s=S.stats;
+  if(e.pol) s.pol=CL(s.pol+e.pol);
+  if(e.eco) s.eco=CL(s.eco+e.eco);
+  if(e.peo) s.peo=CL(s.peo+e.peo);
+  if(e.mil) s.mil=CL(s.mil+e.mil);
+  if(e.imp) s.imp=CL(s.imp+e.imp);
+  if(e.treasury) S.treasury=Math.max(0,S.treasury+e.treasury);
+}
+function effText(e){
+  if(!e) return '';
+  const m={pol:'政治',eco:'国库',peo:'民生',mil:'军力',imp:'皇权'};
+  const out=[];
+  for(const k in m){ if(e[k]) out.push(m[k]+(e[k]>0?'+'+e[k]:e[k])); }
+  if(e.treasury) out.push('银两'+(e.treasury>0?'+'+e.treasury:e.treasury)+'万');
+  return out.join(' ');
+}
+
+/* ---------- 时间 ---------- */
+function timeStr(){
+  return S.era+' '+S.year+'年 '+S.month+'月 · '+SHICHEN[S.sc]+'时';
+}
+/* 每次决断约推进一月（时辰仅作当下情境的刻度） */
+function advance(n){
+  n = n || RI(1,2);
+  while(n-- > 0){
+    S.month++;
+    if(S.month>12){ S.month=1; S.year++; }
+  }
+  S.sc = RI(3,10);
+}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  document.getElementById('hEra').textContent=S.era+'　在位 '+S.year+' 年';
+  document.getElementById('hClock').innerHTML=timeStr()+'<br>第 '+S.turn+' 次决断　国库 '+S.treasury+' 万两';
+  document.getElementById('turnTip').textContent='第 '+S.turn+' 决　·　在位第 '+S.year+' 年（满十二年退位）';
+
+  // 五维
+  document.getElementById('statsBox').innerHTML=STAT_META.map(m=>{
+    const v=S.stats[m.k];
+    const tip = v>=70?'<span class="taggood">'+m.good+'</span>':(v<40?'<span class="tagwarn">'+m.bad+'</span>':'<span class="muted">尚可</span>');
+    return '<div class="stat"><div class="row"><span>'+m.n+'</span><span class="val" style="color:'+barColor(v)+'">'+v+'/100</span></div>'+
+      '<div class="bar"><i style="width:'+v+'%;background:'+barColor(v)+'"></i></div>'+
+      '<div class="muted" style="font-size:12px">'+tip+'</div></div>';
+  }).join('');
+
+  // 概览
+  const alive=S.officials.filter(o=>!o.dead);
+  const rebel=alive.filter(o=>o.ambition>75).length;
+  const dis=alive.filter(o=>o.loyalty<40).length;
+  document.getElementById('overviewBox').innerHTML=
+    '<div class="kv"><span>在位年数</span><b>'+S.year+'</b></div>'+
+    '<div class="kv"><span>国库银两</span><b>'+S.treasury+' 万两</b></div>'+
+    '<div class="kv"><span>在朝大臣</span><b>'+alive.length+' 人</b></div>'+
+    '<div class="kv"><span>野心高者</span><b style="color:'+(rebel?'#b03a2e':'#3f6b45')+'">'+rebel+' 人</b></div>'+
+    '<div class="kv"><span>忠诚低者</span><b style="color:'+(dis?'#b03a2e':'#3f6b45')+'">'+dis+' 人</b></div>'+
+    '<div class="kv"><span>储君</span><b>'+(S.heir||'未立')+'</b></div>'+
+    Object.keys(S.enemies).map(k=>'<div class="kv"><span>'+k+'威胁</span><b>'+S.enemies[k]+'</b></div>').join('');
+
+  renderPeople();
+  renderLog();
+  renderActions();
+}
+
+function miniBar(v,c){ return '<span class="mini"><i style="width:'+CL(v)+'%;background:'+c+'"></i></span>'; }
+
+function renderPeople(){
+  const box=document.getElementById('peopleBox');
+  document.querySelectorAll('.tabs div').forEach(d=>d.classList.toggle('on',d.dataset.tab===TAB));
+  if(TAB==='o'){
+    box.innerHTML=S.officials.map(o=>
+      '<div class="pcard '+(o.dead?'dead':'')+'" data-id="'+o.id+'">'+
+      '<div class="nm">'+o.name+'<small>'+o.title+(o.dead?'（已故）':(o.jailed?'（下狱）':''))+'</small></div>'+
+      '<div class="tr">'+o.age+'岁 · '+o.traits.join('、')+'</div>'+
+      '<div class="nums">忠诚'+miniBar(o.loyalty,'#3f8f4f')+o.loyalty+'　野心'+miniBar(o.ambition,'#b03a2e')+o.ambition+'</div>'+
+      '<div class="act">'+esc(o.action)+'</div></div>').join('')||'<div class="muted">朝堂无人。</div>';
+  }else if(TAB==='c'){
+    box.innerHTML=S.consorts.map(c=>
+      '<div class="pcard" data-cid="'+c.id+'">'+
+      '<div class="nm">'+c.name+'<small>'+c.rank+'</small></div>'+
+      '<div class="tr">'+c.age+'岁 · '+c.family+' · '+c.traits.join('、')+'</div>'+
+      '<div class="nums">宠爱'+miniBar(c.favor,'#c0608a')+c.favor+'</div>'+
+      '<div class="act">'+esc(c.action)+'</div></div>').join('');
+  }else if(TAB==='p'){
+    box.innerHTML=S.princes.map(p=>
+      '<div class="pcard" style="cursor:default">'+
+      '<div class="nm">'+p.name+'<small>'+(S.heir===p.name?'（储君）':'')+'</small></div>'+
+      '<div class="tr">'+p.age+'岁 · 生母：'+(p.mother||'不详')+'</div>'+
+      '<div class="nums">朝中支持'+miniBar(p.support,'#33556f')+p.support+'</div></div>').join('');
+  }else{
+    box.innerHTML=(S.annals.length?S.annals.map(a=>'<p class="ln history">'+a+'</p>').join(''):'<div class="muted">史官尚未落笔。</div>');
+  }
+  box.querySelectorAll('.pcard[data-id]').forEach(el=>el.onclick=()=>showOfficial(el.dataset.id));
+  box.querySelectorAll('.pcard[data-cid]').forEach(el=>el.onclick=()=>showConsort(el.dataset.cid));
+}
+
+function showOfficial(id){
+  const o=S.officials.find(x=>x.id===id); if(!o) return;
+  const clue=o.clue?'<div class="kv"><span>你掌握的线索</span><b>'+esc(o.clue)+'</b></div>':'';
+  const plot=o.plot?'<div class="kv"><span>你察觉的异动</span><b style="color:#b03a2e">'+o.plot.label+'（'+o.plot.progress+'/'+o.plot.need+'）</b></div>':'';
+  openModal({
+    title:o.name+' · '+o.title,
+    body:'<div class="kv"><span>年龄</span><b>'+o.age+'</b></div>'+
+      '<div class="kv"><span>性格</span><b>'+o.traits.join('、')+'</b></div>'+
+      '<div class="kv"><span>忠诚 / 野心</span><b>'+o.loyalty+' / '+o.ambition+'</b></div>'+
+      '<div class="kv"><span>个人目标</span><b>'+esc(o.goal)+'</b></div>'+
+      '<div class="kv"><span>当前行动</span><b>'+esc(o.action)+'</b></div>'+
+      '<div class="kv"><span>盟友 / 政敌</span><b>'+(o.allies.join('、')||'无')+' / '+(o.rivals.join('、')||'无')+'</b></div>'+
+      clue+plot,
+    buttons:[{label:'知道了',cls:'main',fn:closeModal}]
+  });
+}
+function showConsort(id){
+  const c=S.consorts.find(x=>x.id===id); if(!c) return;
+  openModal({
+    title:c.name+' · '+c.rank,
+    body:'<div class="kv"><span>年龄</span><b>'+c.age+'</b></div>'+
+      '<div class="kv"><span>出身</span><b>'+c.family+'</b></div>'+
+      '<div class="kv"><span>性格</span><b>'+c.traits.join('、')+'</b></div>'+
+      '<div class="kv"><span>宠爱度</span><b>'+c.favor+'</b></div>'+
+      '<div class="kv"><span>个人目标</span><b>'+esc(c.goal)+'</b></div>'+
+      '<div class="kv"><span>当前行动</span><b>'+esc(c.action)+'</b></div>'+
+      '<div class="kv"><span>关系网</span><b>'+esc(c.relation)+'</b></div>'+
+      '<div class="kv"><span>子嗣</span><b>'+(c.son||'无')+'</b></div>',
+    buttons:[{label:'知道了',cls:'main',fn:closeModal}]
+  });
+}
+
+/* ---------- 弹窗 ---------- */
+function openModal(cfg){
+  const root=document.getElementById('modal');
+  root.innerHTML='<div class="mbox"><h3>'+cfg.title+'</h3><div class="mbody">'+(cfg.body||'')+'</div><div class="mbtns"></div></div>';
+  const bt=root.querySelector('.mbtns');
+  (cfg.buttons||[{label:'知道了',cls:'main',fn:closeModal}]).forEach(b=>{
+    const el=document.createElement('button');
+    el.className='btn '+(b.cls||''); el.textContent=b.label;
+    el.onclick=()=>{ b.fn&&b.fn(); };
+    bt.appendChild(el);
+  });
+  root.classList.add('show');
+}
+function closeModal(){ const m=document.getElementById('modal'); m.classList.remove('show'); m.innerHTML=''; }
+
+/* 三思提示 */
+function think(title,impacts,onYes){
+  const h='<div class="think"><b>请皇上三思——</b><ul>'+
+    impacts.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>'+
+    '<p class="muted">你仍可一意孤行，但后果自负。</p>';
+  openModal({title:'⚠ '+title,body:h,buttons:[
+    {label:'收回成命',fn:closeModal},
+    {label:'朕意已决',cls:'main danger',fn:function(){closeModal();onYes();}}
+  ]});
+}
+
+/* 选择目标 */
+function pickOne(title,list,render,cback,cancelLabel){
+  if(!list.length){ openModal({title:title,body:'<p class="muted">无可用目标。</p>',buttons:[{label:'知道了',cls:'main',fn:closeModal}]}); return; }
+  openModal({title:title,body:'<ul class="pl">'+list.map((x,i)=>'<li data-i="'+i+'">'+render(x)+'</li>').join('')+'</ul>',
+    buttons:[{label:cancelLabel||'作罢',fn:closeModal}]});
+  document.querySelectorAll('#modal .pl li').forEach(li=>{
+    li.onclick=()=>{ const x=list[+li.dataset.i]; closeModal(); cback(x); };
+  });
+}
+
+/* ---------- 回合推进 ---------- */
+function endTurn(cost){
+  advance(cost||RI(1,3));
+  S.turn++;
+  resolvePending();
+  npcPhase();
+  if(S.turn%5===0) writeAnnals();
+  render();
+  checkEnding();
+}
+
+function resolvePending(){
+  if(!S.pending.length) return;
+  const done=S.pending.filter(p=>--p.turns<=0);
+  S.pending=S.pending.filter(p=>p.turns>0);
+  done.forEach(p=>{
+    const o=S.officials.find(x=>x.name===p.target);
+    if(!o){ log('密探来报：查无此人。','report'); return; }
+    if(chance(.28)){
+      const fake=R(['清白无瑕，与同僚走动不过是寻常交情。','不过是宴饮游乐，未见异常。','此人家中清贫，不像有异心之人。','有人指认其政敌才是真凶。']);
+      log('🕵️ 密探来报（真伪未辨）：'+o.name+'——'+fake,'report');
+      o.suspicion=Math.max(0,o.suspicion-10);
+    }else{
+      let msg;
+      if(o.plot){
+        msg=R([
+          o.name+'近日频繁出入'+R(PLOTS).label+'之事，似有端倪。',
+          '查得'+o.name+'私下会见数位武将，言语间提及“时机”。',
+          o.name+'账上多出一笔来路不明的银子，约'+RI(3,20)+'万两。'
+        ]);
+        o.plot.progress=Math.max(0,o.plot.progress-2);
+        o.clue=o.plot.label+'的蛛丝马迹';
+      }else{
+        msg=o.name+'素来谨慎，未查出实证。其近况：'+o.action;
+      }
+      o.suspicion+=15;
+      log('🕵️ 密探来报：'+msg,'report');
+    }
+  });
+}
+
+function npcPhase(){
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  const cons=S.consorts;
+  const rep=[];
+
+  alive.forEach(o=>{
+    // 行动
+    if(chance(.65)){
+      const tpl=R(ACT_M)
+        .replace('{m}',(alive.filter(x=>x!==o)[0]||{name:'某同僚'}).name)
+        .replace('{f}',cons.length?R(cons).name:'某宫')
+        .replace('{n}',o.name);
+      o.action=tpl;
+    }
+    // 隐藏进度（并非每月都有进展）
+    if(o.plot){
+      if(chance(.45)) o.plot.progress++;
+      if(o.plot.progress>=o.plot.need){ firePlot(o); }
+    }else if(o.ambition>78&&chance(.12)){
+      o.plot=Object.assign({},R(PLOTS),{progress:0});
+    }
+    // 忠诚漂移
+    if(chance(.3)) o.loyalty=CL(o.loyalty+(S.stats.imp>60?RI(0,2):RI(-3,0)));
+    if(S.treasury<150&&chance(.3)) o.loyalty=CL(o.loyalty-2);
+    if(chance(.2)) o.ambition=CL(o.ambition+(S.stats.imp<45?RI(1,3):RI(-2,1)));
+  });
+
+  cons.forEach(c=>{
+    if(chance(.6)){
+      c.action=R(ACT_F)
+        .replace('{f2}',(cons.filter(x=>x!==c)[0]||{name:'某妃'}).name)
+        .replace('{n}',(alive[0]||{name:'某大臣'}).name);
+    }
+    if(chance(.4)) c.favor=CL(c.favor-RI(1,3));
+  });
+
+  // 简报
+  const picks=shuffle(alive.slice()).slice(0,Math.min(3,alive.length));
+  picks.forEach(o=>rep.push('【'+o.name+'】'+o.action));
+  if(cons.length&&chance(.7)){ const c=R(cons); rep.push('【'+c.rank+c.name+'】'+c.action); }
+  if(chance(.55)) rep.push('【民间】'+R(FOLK));
+
+  if(rep.length){
+    log('— 这段时日，你不在场时 —','sys');
+    rep.forEach(r=>log('　'+r,'report'));
+  }
+
+  // 自然衰减
+  if(S.treasury<120&&chance(.5)){ applyEff({eco:-2,peo:-2}); log('国库见底，百官俸禄已拖延两月。','danger'); }
+  if(S.stats.peo<30&&chance(.35)){ log('州府急报：流民聚众，已有蠢蠢欲动之势。','danger'); }
+}
+
+function firePlot(o){
+  const t=o.plot.type;
+  o.plot.progress=0;
+  if(t==='篡位'){
+    log('⚠ '+o.name+'党羽已备，趁着夜色围了宫门！','danger');
+    if(S.stats.mil>55&&S.stats.imp>50){
+      applyEff({pol:-8,mil:-6,imp:+4});
+      log('禁军及时镇压，'+o.name+'被拿下。朝野震动，然你在殿上坐得更稳了。','good');
+      o.jailed=true; o.loyalty=0;
+      S.flags.kill++;
+    }else{
+      applyEff({pol:-25,imp:-20,mil:-10});
+      log('禁军倒戈。'+o.name+'立于殿下，只说了一句：“陛下，该歇了。”','danger');
+    }
+  }else if(t==='贪腐'){
+    applyEff({eco:-8,peo:-6,pol:-4});
+    S.treasury=Math.max(0,S.treasury-RI(80,180));
+    log('⚠ 查出'+o.name+'贪墨帑银'+RI(5,30)+'万两，账册已被销毁大半。','danger');
+    o.loyalty=CL(o.loyalty-15);
+  }else if(t==='结党'){
+    applyEff({pol:-7,imp:-5});
+    log('⚠ '+o.name+'已结成朋党，朝中数人唯其马首是瞻。','danger');
+    o.ambition=CL(o.ambition+5);
+  }else if(t==='通敌'){
+    const k=R(Object.keys(S.enemies));
+    S.enemies[k]=CL(S.enemies[k]+15);
+    applyEff({mil:-8,pol:-5});
+    log('⚠ 边关截获密信，'+o.name+'似与'+k+'往来。','danger');
+    o.loyalty=0;
+  }else if(t==='拥立'){
+    const p=R(S.princes);
+    p.support=CL(p.support+20);
+    applyEff({pol:-6,imp:-4});
+    log('⚠ 朝中有人为'+p.name+'造势，幕后主使似是'+o.name+'。','danger');
+  }
+}
+
+/* ---------- 史官 ---------- */
+function writeAnnals(){
+  const s=S.stats;
+  const r=S.recent.slice(-6);
+  const acts=r.length?r.join('；'):'无所举措';
+  const judge=s.peo>65?'百姓颂之':(s.peo<35?'民有怨言':'民间无誉无毁');
+  const t='史官曰：'+S.era+' '+S.year+'年，上'+acts+'。'+
+    '是时政治'+s.pol+'、府库'+s.eco+'、民生'+s.peo+'、军备'+s.mil+'、皇威'+s.imp+'，'+judge+'。';
+  S.annals.push(t);
+  log(t,'history');
+  S.recent=[];
+}
+
+/* ---------- 操作 ---------- */
+const ACTIONS=[
+  {k:'court',n:'上朝',main:true},
+  {k:'memorial',n:'批折子',main:true},
+  {k:'flip',n:'翻牌子'},
+  {k:'incognito',n:'微服私访'},
+  {k:'spy',n:'密探查案'},
+  {k:'reward',n:'赏赐'},
+  {k:'punish',n:'贬谪·斩首'},
+  {k:'prince',n:'立太子'},
+  {k:'war',n:'出兵'},
+  {k:'tax',n:'免税赈灾'},
+  {k:'tuien',n:'推恩令'},
+  {k:'talk',n:'召见独对'},
+  {k:'wait',n:'静观其变'},
+  {k:'save',n:'存档'},
+  {k:'load',n:'读档'},
+  {k:'restart',n:'重开'}
+];
+function renderActions(){
+  const f=document.getElementById('actions');
+  f.innerHTML='';
+  ACTIONS.forEach(a=>{
+    const b=document.createElement('button');
+    b.className='btn'+(a.main?' main':'');
+    b.textContent=a.n;
+    b.onclick=()=>doAction(a.k);
+    f.appendChild(b);
+  });
+}
+
+function doAction(k){
+  if(S.over) return;
+  const A={
+    court:actCourt, memorial:actMemorial, flip:actFlip, incognito:actIncognito,
+    spy:actSpy, reward:actReward, punish:actPunish, prince:actPrince,
+    war:actWar, tax:actTax, tuien:actTuien, talk:actTalk, wait:actWait,
+    save:actSave, load:actLoad, restart:actRestart
+  };
+  (A[k]||function(){})();
+}
+
+/* ---- 上朝 ---- */
+const TOPICS=[
+  {t:'边关急报',d:'北狄骑兵南下，掠走边民三千。边将八百里加急请旨。',
+   o:[{l:'发兵增援，夺回边民',e:{mil:-8,treasury:-150,pol:+4,imp:+3},r:'大军北上，斩获颇丰。然粮秣耗去巨万。'},
+      {l:'遣使议和，许以岁币',e:{treasury:-90,imp:-6,peo:-3},r:'岁币换得短暂安宁，朝中讥你怯弱。'},
+      {l:'诏令边关坚壁清野',e:{peo:-5,mil:+3,eco:+3},r:'边民内迁，怨声载道，但保全了主力。'}]},
+  {t:'御史弹劾',d:'御史大夫跪奏：某部堂官贪墨河工银两，请陛下明鉴。',
+   o:[{l:'交三法司严查',e:{pol:+4,imp:+3,eco:+2},r:'三司会审，牵出数人，朝堂一清。'},
+      {l:'留中不发，以观后效',e:{pol:-3,imp:-4,eco:-4},r:'弹章被压。有人松了口气，有人寒了心。'},
+      {l:'当场质问该部堂官',e:{imp:+5,pol:-3},r:'殿上一片死寂。那人叩首不语。'}]},
+  {t:'科场舞弊',d:'今科春闱，有举子联名控告考官泄题。',
+   o:[{l:'重考，罢黜涉事考官',e:{pol:+5,peo:+4,imp:+2},r:'寒门士子夹道称颂，然得罪了几个大族。'},
+      {l:'压下此事，保全体面',e:{pol:-4,peo:-6,imp:-3},r:'士林哗然，市井编了歌谣骂你。'},
+      {l:'只斩为首一人',e:{pol:+2,imp:+1,peo:+1},r:'一人伏法，余人各有心思。'}]},
+  {t:'军饷告急',d:'兵部奏：边军已三月未发饷，士卒有哗变之虞。',
+   o:[{l:'动用内帑补发',e:{treasury:-200,mil:+10,peo:+2},r:'军心大振。然内帑亦非无尽。'},
+      {l:'加征商税以充军饷',e:{treasury:+120,peo:-8,eco:+4},r:'商贾叫苦，百姓亦受波及。'},
+      {l:'令地方摊派',e:{treasury:+60,peo:-6,pol:-3},r:'地方怨怼，奏折雪片般飞来。'}]},
+  {t:'太后干政',d:'太后召见军机，言及人事安排，语气不容置喙。',
+   o:[{l:'恭顺从命',e:{imp:-8,pol:+3},r:'你点了头。有老臣低头，不忍看你。'},
+      {l:'婉言驳回，重申亲政',e:{imp:+6,pol:-5},r:'太后拂袖而去。宫中气氛骤冷。'},
+      {l:'借口祭天拖延',e:{imp:-1,pol:-1},r:'拖得一时，拖不了一世。'}]},
+  {t:'漕运亏空',d:'户部奏报：漕运账目亏空四十万石，历年积弊。',
+   o:[{l:'彻查到底',e:{eco:+6,pol:-5,imp:+3},r:'查出蛀虫一串，也查出你家底。'},
+      {l:'责令分年补齐',e:{eco:+2,peo:-2},r:'温水煮蛙，亏空仍在。'},
+      {l:'既往不咎，重整新制',e:{eco:+1,pol:+2},r:'新规立下，旧账无人再提。'}]},
+  {t:'灾异示警',d:'钦天监奏：昨夜彗星犯紫微，主君上有失德之事。',
+   o:[{l:'下罪己诏，减膳撤乐',e:{peo:+8,imp:-2,pol:+3},r:'天下感动，称你为尧舜之君。'},
+      {l:'斥为妖言，杖责钦天监',e:{peo:-5,imp:+4,pol:-3},r:'此后无人再敢言天象。'},
+      {l:'不置可否',e:{},r:'你把奏报压在案头，夜不能寐。'}]},
+  {t:'藩王入朝',d:'一位藩王率五百亲兵入京朝觐，兵临城下。',
+   o:[{l:'厚赏遣还',e:{treasury:-120,pol:+3,mil:-2},r:'藩王满意而归，然胃口更大了。'},
+      {l:'趁机削其护卫',e:{imp:+7,pol:-6,mil:+4},r:'你收了他的兵。他笑着谢恩，眼神很冷。'},
+      {l:'扣为人质',e:{imp:+4,pol:-10,mil:+2},r:'宗室人人自危，书信往来骤密。'}]}
+];
+
+function actCourt(){
+  const tp=R(TOPICS);
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  log('<h4>【早朝】'+tp.t+'</h4>','narr');
+  log(tp.d,'narr');
+
+  const spk=shuffle(alive.slice()).slice(0,Math.min(3,alive.length));
+  let heartTarget=null;
+  spk.forEach(o=>{
+    log('【'+o.title+' '+o.name+'】'+R(SPEAK),'surf');
+    if(chance(.3)){
+      const other=(alive.filter(x=>x!==o)[0]||{name:'身旁之人'}).name;
+      log('你注意到——'+R(HEART).replace('{n}',o.name).replace('{m}',other),'heart');
+      heartTarget=o;
+    }
+  });
+
+  const opts=tp.o.slice();
+  let extra=null;
+  if(heartTarget){
+    extra=heartTarget;
+  }
+  openModal({
+    title:'早朝 · '+tp.t,
+    body:'<p>'+tp.d+'</p>'+(extra?'<p class="muted">（殿上，'+extra.name+'方才有些不自然。你可以顺手一试，也可以先按住不表。）</p>':''),
+    buttons:opts.map(op=>({label:op.l,cls:'',fn:()=>{
+      closeModal();
+      applyEff(op.e);
+      S.recent.push('于朝堂议“'+tp.t+'”，'+op.r);
+      log('▶ 你决断：'+op.l,'narr');
+      log(op.r, (op.e.pol||0)+(op.e.peo||0)+(op.e.imp||0)>=0?'good':'danger');
+      if(op.e.imp<-5||op.e.peo<-5) maybeSilence();
+      endTurn(RI(1,2));
+    }})).concat(extra?[{label:'追问'+extra.name,cls:'',fn:()=>{closeModal();press(extra,tp);}}]:[])
+      .concat([{label:'退朝，暂不议',cls:'main',fn:()=>{closeModal();log('你说了句“容后再议”，起身退朝。','narr');endTurn(1);}}])
+  });
+}
+
+function press(o,tp){
+  log('你忽然点名：“'+o.name+'，抬起头来。”','narr');
+  const hasPlot=!!o.plot;
+  if(hasPlot&&chance(.6)){
+    o.suspicion+=20;
+    o.clue=o.plot.label+'的蛛丝马迹';
+    o.plot.progress=Math.max(0,o.plot.progress-3);
+    log(o.name+'额上见汗，答话比平日慢了半拍。你记下了这一瞬。','good');
+    S.recent.push('朝堂追问'+o.name+'，似有所得');
+  }else{
+    o.loyalty=CL(o.loyalty-6); o.ambition=CL(o.ambition+4);
+    o.action='近来称病，闭门谢客。';
+    log(o.name+'从容叩首，滴水不漏。你什么也没问出来——但他记住了这一问。','danger');
+    S.recent.push('朝堂追问'+o.name+'，君臣生隙');
+  }
+  // 议题仍要定夺
+  openModal({title:'早朝 · '+tp.t,body:'<p>'+tp.d+'</p>',
+    buttons:tp.o.map(op=>({label:op.l,fn:()=>{
+      closeModal(); applyEff(op.e);
+      S.recent.push('朝议“'+tp.t+'”，'+op.r);
+      log('▶ 你决断：'+op.l,'narr'); log(op.r,'narr');
+      endTurn(1);
+    }}))});
+}
+
+/* ---- 批折子 ---- */
+const MEMORIALS=[
+  {t:'江南水患',d:'苏州、松江二府堤坝溃决，灾民十万，请旨开仓。',
+   o:[{l:'开仓赈济',e:{peo:+10,eco:-8,treasury:-120},r:'朝廷开仓，活人无数，府库为之一空。'},
+      {l:'令地方自筹',e:{peo:-8,pol:-3},r:'灾民涌入州府，地方怨声载道。'},
+      {l:'派员彻查河工',e:{eco:-4,pol:+4,imp:+3},r:'查出河工贪墨三名，堤坝重修。'}]},
+  {t:'驿站裁撤',d:'有言官建议裁撤三成驿站，每年可省银三十万两。',
+   o:[{l:'准奏裁撤',e:{treasury:+90,eco:+5,pol:-4},r:'省下银子。被裁的驿卒无处可去。'},
+      {l:'驳回',e:{treasury:-40,pol:+2},r:'你保住了他们的饭碗，也保住了开销。'},
+      {l:'裁撤但给遣散银',e:{treasury:+20,peo:+4,pol:-1},r:'两全之法，然两全最费钱。'}]},
+  {t:'流民安置',d:'京畿聚流民万余，或言编入军户，或言遣返原籍。',
+   o:[{l:'编入军户屯田',e:{mil:+6,treasury:-60,peo:+2},r:'流民成了兵，也成了粮。'},
+      {l:'遣返原籍',e:{peo:-4,treasury:-30},r:'道上饿殍相望，无人敢报。'},
+      {l:'设粥厂赈济',e:{treasury:-80,peo:+7},r:'粥香三日，之后呢？'}]},
+  {t:'铜钱私铸',d:'市面私钱泛滥，物价腾贵，户部请严禁。',
+   o:[{l:'严刑峻法，一律处斩',e:{eco:+6,peo:-5,pol:+2},r:'市面肃清，也斩掉了几条活路。'},
+      {l:'设官炉，收私钱',e:{eco:+4,treasury:-70,peo:+3},r:'慢慢来，物价渐平。'},
+      {l:'睁一只眼闭一只眼',e:{eco:-5,peo:-2},r:'你没管。钱越来越毛。'}]},
+  {t:'边将请功',d:'边将上表请功，言斩首三千。有人说是虚报。',
+   o:[{l:'照准封赏',e:{treasury:-80,mil:+5,imp:-2},r:'赏了。真假无人再查。'},
+      {l:'派人核实',e:{imp:+4,mil:-3,pol:+2},r:'核出虚报，军中自此不敢妄言。'},
+      {l:'压着不批',e:{mil:-5,imp:-2},r:'边将的心，凉了一半。'}]},
+  {t:'寺庙占田',d:'京畿良田三成归于寺院，不纳赋税。',
+   o:[{l:'清丈田亩，勒令纳税',e:{treasury:+110,eco:+6,pol:-5},r:'国库丰了，僧人不高兴。'},
+      {l:'徐图缓之',e:{eco:+1,pol:+1},r:'你决定等一个更合适的时机。'},
+      {l:'置之不理',e:{eco:-3},r:'田还是那些田，赋还是那些赋。'}]}
+];
+function actMemorial(){
+  const m=R(MEMORIALS);
+  openModal({title:'批红 · '+m.t,body:'<p>'+m.d+'</p><p class="muted">朱笔悬在半空。</p>',
+    buttons:m.o.map(op=>({label:op.l,fn:()=>{
+      closeModal(); applyEff(op.e);
+      S.recent.push('批“'+m.t+'”，'+op.r);
+      log('<h4>【批红】'+m.t+'</h4>','narr');
+      log('▶ '+op.l+'　<span class="muted">'+effText(op.e)+'</span>','narr');
+      log(op.r,(op.e.peo||0)+(op.e.eco||0)>=0?'good':'danger');
+      endTurn(RI(1,2));
+    }}))});
+}
+
+/* ---- 翻牌子 ---- */
+function actFlip(){
+  pickOne('今夜翻牌子',S.consorts,c=>'<b>'+c.name+'</b>　'+c.rank+'　宠爱 '+c.favor+'　<span class="muted">'+c.traits.join('、')+'</span>',c=>{
+    c.favor=CL(c.favor+RI(10,18));
+    log('<h4>【夜宴】'+c.rank+c.name+'</h4>','narr');
+    log('你翻了'+c.name+'的牌子。她来了，斟了一盏茶。','narr');
+    if(chance(.55)){
+      const alive=S.officials.filter(o=>!o.dead);
+      const t=alive.length?R(alive):null;
+      if(t){
+        const selfish=c.favor<60&&chance(.5);
+        let line;
+        if(selfish){
+          line='她替父兄求了个肥缺。你应了，国库少了些进项。';
+          applyEff({treasury:-40,eco:-2});
+        }else if(t.plot){
+          line='她说：'+t.name+'近来夜里常出门，回来时靴底有泥。（枕边风，未必真）';
+          t.suspicion+=10; c.favor=CL(c.favor+3);
+        }else{
+          line='她说：'+t.name+'这人，看着板正，其实心里有本账。';
+        }
+        log(line,'heart');
+        S.recent.push('夜幸'+c.name);
+      }
+    }else{
+      log('一夜无话。窗外的更声敲了三遍。','narr');
+    }
+    endTurn(2);
+  });
+}
+
+/* ---- 微服私访 ---- */
+function actIncognito(){
+  log('<h4>【微服私访】</h4>','narr');
+  const where=R(['东市茶楼','城南酒肆','校场军营','贡院之外','运河码头']);
+  log('你换了常服，去了'+where+'。','narr');
+  const r=RI(1,100);
+  if(r<40){
+    log('街谈巷议：'+R(FOLK),'report');
+    log('（舆情未必准，但总比奏章真。）','muted');
+    applyEff({peo:+2});
+  }else if(r<70){
+    const alive=S.officials.filter(o=>!o.dead);
+    const o=R(alive);
+    const truth=!!o.plot;
+    log('有人醉后说起'+o.name+'：'+(truth?R(['“那位的宅子，三年修了五回。”','“听说他家夜里常有客，都是带刀的。”','“他的管家在城南买了两处庄院。”']):R(['“是个清官，家里连口好棺材都置办不起。”','“他为百姓修过桥，我记得。”','“那人有脾气，但不是坏人。”'])),'report');
+    if(truth){ o.suspicion+=12; o.clue=o.plot.label+'的风声'; }
+  }else if(r<88){
+    log('你听见有人在说书，说的是本朝开国的事。说到末了，压低了嗓子：','report');
+    log('“……如今这位爷嘛——”他看着你，忽然不说了。','heart');
+  }else{
+    log('你被巡街的兵丁盘问，随从亮了腰牌。众人跪了一地。','narr');
+    applyEff({imp:+3,peo:-2});
+  }
+  S.recent.push('微服私访'+where);
+  endTurn(RI(2,4));
+}
+
+/* ---- 密探 ---- */
+function actSpy(){
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  pickOne('派密探查谁？（耗一日、银五十万两）',alive,
+    o=>'<b>'+o.name+'</b>　'+o.title+'　<span class="muted">忠诚'+o.loyalty+'　野心'+o.ambition+'</span>',
+    o=>{
+      if(S.treasury<50){ log('国库拿不出这笔银子了。','danger'); endTurn(1); return; }
+      S.treasury-=50;
+      S.pending.push({target:o.name,turns:1});
+      log('你点了点头。暗影里有人退下。','narr');
+      S.recent.push('遣密探查'+o.name);
+      endTurn(2);
+    });
+}
+
+/* ---- 赏赐 ---- */
+function actReward(){
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  pickOne('赏谁？',alive,o=>'<b>'+o.name+'</b>　'+o.title+'　忠诚 '+o.loyalty,o=>{
+    openModal({title:'赏赐 '+o.name,body:'<p>赏什么？国库现有 '+S.treasury+' 万两。</p>',
+      buttons:[
+        {label:'赏白银三十万两',fn:()=>{closeModal();applyEff({treasury:-30,eco:-1});o.loyalty=CL(o.loyalty+12);o.action='受赏后连上三道谢恩折。';log('你赏了'+o.name+'白银三十万两。他叩首，额头触地有声。','good');S.recent.push('厚赏'+o.name);endTurn(1);}},
+        {label:'加官进爵',fn:()=>{closeModal();applyEff({imp:+2,pol:-2});o.loyalty=CL(o.loyalty+15);o.ambition=CL(o.ambition+4);o.title=o.title.indexOf('兼')>=0?o.title:'兼'+R(['太子太保','大学士','都察院职']);log('你给'+o.name+'加了一道虚衔。有人欢喜，有人在殿外冷笑。','good');S.recent.push('加封'+o.name);endTurn(1);}},
+        {label:'赐御笔匾额',fn:()=>{closeModal();applyEff({});o.loyalty=CL(o.loyalty+8);log('你亲笔写了“国之栋梁”四字。他捧着匾额，哭了。','good');S.recent.push('赐字'+o.name);endTurn(1);}},
+        {label:'作罢',cls:'main',fn:closeModal}
+      ]});
+  });
+}
+
+/* ---- 贬谪 / 斩首 ---- */
+function actPunish(){
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  pickOne('处置谁？',alive,o=>'<b>'+o.name+'</b>　'+o.title+'　<span class="muted">忠诚'+o.loyalty+'　野心'+o.ambition+'　'+(o.clue?('线索：'+o.clue):'无线索')+'</span>',o=>{
+    openModal({title:'处置 '+o.name,
+      body:'<p>'+o.name+'，'+o.title+'，'+o.age+'岁。忠诚 '+o.loyalty+'，野心 '+o.ambition+'。</p>'+
+        (o.clue?'<p class="muted">你手上有线索：'+o.clue+'</p>':'<p class="muted">你手上并无实证。</p>')+
+        '<p class="muted">他的盟友：'+(o.allies.join('、')||'无')+'　政敌：'+(o.rivals.join('、')||'无')+'</p>',
+      buttons:[
+        {label:'贬为庶人',fn:()=>{closeModal();doPunish(o,'贬');}},
+        {label:'下狱论罪',fn:()=>{closeModal();doPunish(o,'狱');}},
+        {label:'斩立决',cls:'danger',fn:()=>{closeModal();doPunish(o,'斩');}},
+        {label:'作罢',cls:'main',fn:closeModal}
+      ]});
+  });
+}
+function doPunish(o,type){
+  // 死谏判定
+  if(o.loyalty>78&&!o.plot&&chance(.65)){ remonstrance(o); return; }
+
+  const warn={
+    '贬':['可削其权柄；','其党羽必怀恨在心；','有人会因此看清你的手段——好坏未定。'],
+    '狱':['可断其一臂；','狱中之人往往更恨你；','他的供词会牵出谁，你无法预料。'],
+    '斩':['杀一儆百，朝堂立肃；','其门生故吏或生异心；','若他其实无辜，天下忠臣寒心。']
+  }[type];
+  think('处置 '+o.name+'（'+type+'）',warn,function(){
+    if(type==='贬'){
+      applyEff({pol:-3,imp:+3}); o.ambition=CL(o.ambition-8); o.loyalty=CL(o.loyalty-25);
+      o.action='被贬出京，临行前在午门外站了很久。';
+      log('▶ 你下旨：'+o.name+'革职，贬为庶人。','narr');
+      log(o.name+'脱下朝服，叩了三个头，没说话。','narr');
+    }else if(type==='狱'){
+      applyEff({pol:-5,imp:+4}); o.jailed=true; o.loyalty=0;
+      log('▶ 你下旨：'+o.name+'拿下，交诏狱。','narr');
+      log('殿上有人出列求情，你没理会。','narr');
+      rally(o,-15);
+    }else{
+      applyEff({pol:-8,imp:+7,peo:-4}); o.dead=true; o.loyalty=0;
+      S.flags.kill++;
+      log('▶ 你下旨：'+o.name+'斩立决。','narr');
+      log('午时三刻。菜市口人山人海，有人叫好，有人别过脸去。','danger');
+      rally(o,-25);
+    }
+    S.recent.push('以'+type+'处'+o.name);
+    maybeSilence();
+    endTurn(RI(1,2));
+  });
+}
+function rally(o,delta){
+  // 党羽反应
+  S.officials.forEach(x=>{
+    if(x===o||x.dead) return;
+    if(x.allies.indexOf(o.name)>=0){
+      x.loyalty=CL(x.loyalty+delta);
+      x.ambition=CL(x.ambition+Math.abs(Math.round(delta/4)));
+      if(chance(.5)) log('　【'+x.name+'】闻讯后，整日闭门不出。','report');
+    }
+    if(x.rivals.indexOf(o.name)>=0){
+      x.loyalty=CL(x.loyalty-Math.round(delta/3));
+      if(chance(.4)) log('　【'+x.name+'】当夜设宴，请了几位同僚。','report');
+    }
+  });
+}
+
+/* ---- 死谏 ---- */
+function remonstrance(o){
+  log('<h4>【死谏】'+o.name+'</h4>','danger');
+  log(o.name+'未等锦衣卫上前，自己挣脱了。','narr');
+  log('他以头抢地：“臣……受先帝厚恩，不敢惜身！”','surf');
+  log('咚的一声。血溅在丹墀上，无人敢擦。','danger');
+  openModal({title:'死谏 · '+o.name,
+    body:'<p>殿上鸦雀无声。他抬起头，看着你，眼里没有恨。</p><p class="muted">忠诚 '+o.loyalty+'。'+(o.clue?('你手上的线索：'+o.clue):'你手上并无实证。')+'</p>',
+    buttons:[
+      {label:'① 扶起他，重查此案',fn:()=>{
+        closeModal();
+        applyEff({imp:-3,pol:+5,peo:+3});
+        o.loyalty=CL(o.loyalty+10); o.action='奉旨养伤，仍日日上折言事。';
+        log('你走下御阶，亲手把他扶起来。满朝皆惊。','good');
+        log('重查之下，'+R(['果然另有隐情，真凶另有其人。','证据不足，但你给了他一个公道。','查出一名中饱私囊的下属，与他无涉。']),'good');
+        S.flags.remonstrance++;
+        S.recent.push('纳'+o.name+'死谏，重查其案');
+        endTurn(2);
+      }},
+      {label:'② 拂袖而去',fn:()=>{
+        closeModal();
+        applyEff({imp:-8,pol:-5,peo:-4});
+        o.loyalty=CL(o.loyalty-30); o.action='绝食三日，仍跪在殿前。';
+        log('你转身回了后殿。他在阶下跪了一日一夜。','danger');
+        log('此后，奏折里再没有人为你多说一句话。','danger');
+        S.recent.push('无视'+o.name+'死谏');
+        maybeSilence();
+        endTurn(1);
+      }},
+      {label:'③ 借机铲除',fn:()=>{
+        closeModal();
+        applyEff({imp:+5,pol:-10,peo:-8});
+        o.dead=true; S.flags.kill++;
+        log('你冷笑一声：“讪君卖直，拉出去。”','danger');
+        log('他笑了，笑得很轻，然后被拖了下去。','danger');
+        log('史官在角落里，笔尖顿了很久。','danger');
+        rally(o,-35);
+        S.recent.push('杀谏臣'+o.name);
+        maybeSilence();
+        endTurn(1);
+      }}
+    ]});
+}
+
+/* ---- 立太子 ---- */
+function actPrince(){
+  pickOne('立谁为储？',S.princes,p=>'<b>'+p.name+'</b>　'+p.age+'岁　生母 '+(p.mother||'不详')+'　<span class="muted">朝中支持 '+p.support+'</span>',p=>{
+    think('立'+p.name+'为太子',[
+      '储位既定，可止纷争；',
+      '其余皇子及其母族必怀怨望；',
+      '此子能否承社稷之重，天知道。'
+    ],function(){
+      S.heir=p.name;
+      p.support=CL(p.support+25);
+      applyEff({pol:+6,imp:+4});
+      log('<h4>【立储】'+p.name+'</h4>','narr');
+      log('诏书颁下，钟鼓齐鸣。'+p.name+'跪在丹墀上，肩膀微微发抖。','good');
+      S.princes.forEach(x=>{
+        if(x!==p){
+          x.support=CL(x.support-10);
+          const mom=S.consorts.find(c=>c.name===x.mother);
+          if(mom){ mom.favor=CL(mom.favor-10); mom.goal='扳倒'+p.name; }
+        }
+      });
+      const mom=S.consorts.find(c=>c.name===p.mother);
+      if(mom){ mom.favor=CL(mom.favor+15); }
+      S.recent.push('立'+p.name+'为太子');
+      endTurn(2);
+    });
+  });
+}
+
+/* ---- 出兵 ---- */
+function actWar(){
+  const dirs=Object.keys(S.enemies).filter(k=>S.enemies[k]>0);
+  if(!dirs.length){ log('四方宾服，暂无可伐之敌。','good'); endTurn(1); return; }
+  pickOne('出兵何方？',dirs,d=>'<b>'+d+'</b>　威胁值 '+S.enemies[d]+'　<span class="muted">我军力 '+S.stats.mil+'，国库 '+S.treasury+' 万两</span>',d=>{
+    think('出兵'+d,[
+      '胜则拓土扬威，皇权大振；',
+      '败则边防空虚，民生凋敝；',
+      '大军在外，朝中留守者会做什么，你无法看住。'
+    ],function(){
+      if(S.treasury<120){ log('粮草不足，三军未动，户部先来哭穷。','danger'); endTurn(1); return; }
+      S.treasury-=200; S.flags.war++;
+      const power=S.stats.mil+RI(-15,15);
+      const foe=S.enemies[d]+RI(-10,10);
+      log('<h4>【出兵'+d+'】</h4>','narr');
+      log('大军出塞，旌旗蔽日。你站在城楼上，看着他们走远。','narr');
+      if(power>=foe){
+        S.enemies[d]=CL(S.enemies[d]-40);
+        applyEff({mil:-8,imp:+10,peo:+3,pol:+4});
+        log('捷报传来：斩首'+RI(2000,9000)+'，俘获牛羊无算。','good');
+        log('献俘仪式上，你第一次觉得，这座江山是真的。','good');
+        if(S.enemies[d]<=0){
+          log('⚔ '+d+'主力尽丧，其王遣使请降。','good');
+          if(d==='北狄'){ S.flags.beidi=true; applyEff({imp:+10,peo:+6}); log('北狄既灭，漠南无王庭。','good'); }
+        }
+        S.recent.push('出兵'+d+'，大捷');
+      }else{
+        applyEff({mil:-18,pol:-10,peo:-10,imp:-8});
+        log('败报传来：主力被围，折兵'+RI(8000,30000)+'。','danger');
+        log('边关告急的文书，一日三至。','danger');
+        S.enemies[d]=CL(S.enemies[d]+10);
+        S.recent.push('出兵'+d+'，兵败');
+        maybeSilence();
+      }
+      endTurn(RI(3,6));
+    });
+  });
+}
+
+/* ---- 免税赈灾 ---- */
+function actTax(){
+  openModal({title:'免税 · 赈灾',body:'<p>国库现有 '+S.treasury+' 万两。民生 '+S.stats.peo+'。</p>',
+    buttons:[
+      {label:'免天下赋税一年',fn:()=>{closeModal();applyEff({treasury:-220,eco:-8,peo:+14,pol:+3});log('▶ 免税诏下，万民叩首。你看见有人哭。','good');S.recent.push('免天下赋税一年');endTurn(2);}},
+      {label:'仅免灾区三府',fn:()=>{closeModal();applyEff({treasury:-90,eco:-3,peo:+7});log('▶ 三府免税。灾民得以喘息。','good');S.recent.push('免灾区赋税');endTurn(1);}},
+      {label:'开常平仓平粜',fn:()=>{closeModal();applyEff({treasury:-60,eco:-2,peo:+5,pol:+2});log('▶ 官仓开粜，米价渐平。','good');S.recent.push('开常平仓');endTurn(1);}},
+      {label:'作罢',cls:'main',fn:closeModal}
+    ]});
+}
+
+/* ---- 推恩令 ---- */
+function actTuien(){
+  think('行推恩令',[
+    '可析其势，削野心于无形；',
+    '被削者恨你，且不会写在脸上；',
+    '此举一旦开例，宗室与功臣皆将自危。'
+  ],function(){
+    const top=shuffle(S.officials.filter(o=>!o.dead).slice()).sort((a,b)=>b.ambition-a.ambition).slice(0,3);
+    log('<h4>【推恩令】</h4>','narr');
+    log('诏令：诸臣封地、属官，皆分予子弟。','narr');
+    top.forEach(o=>{
+      o.ambition=CL(o.ambition-15); o.loyalty=CL(o.loyalty-10);
+      log('　【'+o.name+'】权柄被析，谢恩时笑得很勉强。','report');
+      if(o.plot) o.plot.progress=Math.max(0,o.plot.progress-4);
+    });
+    applyEff({imp:+6,pol:-4,mil:+2});
+    S.recent.push('行推恩令削权');
+    endTurn(2);
+  });
+}
+
+/* ---- 召见独对 ---- */
+function actTalk(){
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  pickOne('召谁独对？',alive,o=>'<b>'+o.name+'</b>　'+o.title+'　<span class="muted">'+o.traits.join('、')+'</span>',o=>{
+    log('<h4>【独对】'+o.name+'</h4>','narr');
+    log('你赐了座。他坐了半个边。','narr');
+    log('【'+o.name+'】'+R(SPEAK),'surf');
+    if(chance(.45)){
+      log('你注意到——'+R(HEART).replace('{n}',o.name).replace('{m}',(alive.filter(x=>x!==o)[0]||{name:'旁人'}).name),'heart');
+    }
+    o.loyalty=CL(o.loyalty+5);
+    if(chance(.35)&&o.plot){
+      o.clue=o.plot.label+'的蛛丝马迹';
+      log('说到一半，他失言提了一句不该提的事。','good');
+    }
+    S.recent.push('召'+o.name+'独对');
+    endTurn(1);
+  });
+}
+
+/* ---- 静观其变 ---- */
+function actWait(){
+  log('<h4>【静观其变】</h4>','narr');
+  log('你什么也没做。奏折在案头堆着。','narr');
+  S.officials.forEach(o=>{ if(o.plot) o.plot.progress+=2; });
+  applyEff({imp:-2,pol:-1});
+  S.recent.push('无所举措，静观其变');
+  endTurn(RI(3,6));
+}
+
+/* ---- 集体沉默 ---- */
+function maybeSilence(){
+  if(chance(.45)){
+    S.flags.silence++;
+    log('⚠ 你环视殿上。','danger');
+    log('没有一个人出列，没有一个人反对。','danger');
+    log('所有人都低着头，像一片被霜打过的庄稼。','danger');
+    log('（百官沉默。这不是顺从。这是危险。）','danger');
+    applyEff({imp:-6});
+  }
+}
+
+/* ---------- 结局 ---------- */
+function checkEnding(){
+  if(S.over) return;
+  const s=S.stats, v=[s.pol,s.eco,s.peo,s.mil,s.imp];
+  const low=v.filter(x=>x<30).length;
+  const high=v.filter(x=>x>=70).length;
+
+  const alive=S.officials.filter(o=>!o.dead&&!o.jailed);
+  const powerMin=alive.filter(o=>o.ambition>75).length;
+
+  if(s.imp<20&&powerMin>=1&&S.flags.silence>0) return end('傀儡皇帝',
+    '权臣当朝，诏书出于他手，只借你的玉玺一用。<br>你仍是皇帝。你只是不再说话。');
+  if(s.peo<15&&s.pol<25) return end('暴君被刺',
+    '夜半，寝殿的门被轻轻推开。<br>你认得那张脸——是你从小用到大的近侍。<br>他没有说话，只是举起了手里的东西。');
+  if(low>=3) return end('昏君亡国',
+    '州府失守的消息传到京城时，你正在用膳。<br>你放下筷子，忽然想起很多年前，也是这样一个秋天。');
+  if(v.every(x=>x>=85)&&S.flags.beidi) return end('千古一帝',
+    '漠南无王庭，四夷来朝，府库充盈，百姓颂德。<br>史官写到你的庙号时，停笔良久，只写下四个字：<br>——功过难评。');
+  if(high>=5&&S.year>=6) return end('盛世明君',
+    '五项皆盛，海内承平。<br>你把玉玺交给太子那日，天很晴。<br>你没有说什么，他也没有哭。');
+  if(S.year>=12){
+    if(high>=4) return end('中兴之主','你把一个烂摊子收拾得像了样子。<br>只是有些雷，埋得很深，留给了后人。');
+    return end('守成之君','十二年过去，江山还是那个江山。<br>不好，也不坏。史官给你写了三千字，没有一个字是错的。');
+  }
+  if(alive.length===0) return end('无人之朝','你把朝堂杀空了。<br>早朝时，只有你一个人坐在上面。');
+}
+
+function end(title,text){
+  S.over=title;
+  const s=S.stats;
+  const ann='史官曰：'+S.era+'之世，历'+S.year+'年。'+
+    '政治'+s.pol+'、府库'+s.eco+'、民生'+s.peo+'、军备'+s.mil+'、皇威'+s.imp+'。'+
+    '诛大臣'+S.flags.kill+'人，用兵'+S.flags.war+'次，百官沉默'+S.flags.silence+'度。'+
+    '——'+title+'。';
+  S.annals.push(ann);
+  log('<h4>【终局】'+title+'</h4>','danger');
+  log(ann,'history');
+  openModal({title:'终局',
+    body:'<div class="endtitle">'+title+'</div><div class="endtext">'+text+'</div>'+
+      '<p class="ln history" style="margin-top:16px">'+ann+'</p>'+
+      '<p class="muted" style="text-align:center">在位 '+S.year+' 年 · 决断 '+S.turn+' 次</p>',
+    buttons:[{label:'重开一局',cls:'main',fn:()=>{closeModal();startScreen();}}]});
+  render();
+}
+
+/* ---------- 存档 ---------- */
+function actSave(){
+  try{
+    localStorage.setItem('emperor_sim_v1',JSON.stringify(S));
+    log('已存档。','sys');
+    openModal({title:'存档',body:'<p>已写入本地存档。</p>',buttons:[{label:'好',cls:'main',fn:closeModal}]});
+  }catch(e){
+    openModal({title:'存档失败',body:'<p class="muted">浏览器拒绝写入本地存储。</p>',buttons:[{label:'好',cls:'main',fn:closeModal}]});
+  }
+}
+function actLoad(){
+  try{
+    const d=localStorage.getItem('emperor_sim_v1');
+    if(!d){ openModal({title:'读档',body:'<p>没有找到存档。</p>',buttons:[{label:'好',cls:'main',fn:closeModal}]}); return; }
+    S=JSON.parse(d);
+    document.getElementById('hTitle').textContent='朕即江山 · '+S.era;
+    log('读档成功。','sys');
+    render();
+    openModal({title:'读档',body:'<p>已回到 '+S.era+' '+S.year+' 年。</p>',buttons:[{label:'好',cls:'main',fn:closeModal}]});
+  }catch(e){
+    openModal({title:'读档失败',body:'<p class="muted">存档已损坏。</p>',buttons:[{label:'好',cls:'main',fn:closeModal}]});
+  }
+}
+function actRestart(){
+  openModal({title:'重开',body:'<p>将另起炉灶，重开新朝：新人物、新事件、新因果。</p><p class="muted">当前进度会丢失（除非先存档）。</p>',
+    buttons:[{label:'再想想',fn:closeModal},{label:'朕要重开',cls:'main danger',fn:()=>{closeModal();startScreen();}}]});
+}
+
+/* ---------- 开场 ---------- */
+function startScreen(){
+  openModal({title:'朕即江山 · 开国',
+    body:'<p>先帝崩，你十五岁即位。<br>玉玺还带着体温，殿下的臣子已经站好了位置。</p>'+
+      '<p style="margin-top:14px">请定年号：<br><input id="eraInput" maxlength="4" style="font-family:inherit;font-size:16px;padding:6px 10px;width:140px;border:1px solid #b79a63;border-radius:4px;background:#fffdf5" value="建极"></p>'+
+      '<p class="muted">游戏规则：每次决断约推进一月，你不在场时，臣子与妃子在暗中行动。<br>五维跌破底线即亡国，康健者熬满十二年退位。信息永远不透明——<br>你只能靠言行、微表情、密报和传闻拼凑真相。</p>',
+    buttons:[{label:'朕来了',cls:'main',fn:()=>{
+      const v=(document.getElementById('eraInput').value||'建极').trim()||'建极';
+      closeModal();
+      begin(v);
+    }}]});
+}
+
+function begin(era){
+  newGame(era);
+  document.getElementById('hTitle').textContent='朕即江山 · '+era;
+  log('<h4>【'+era+'元年】</h4>','narr');
+  log('你坐上龙椅的第一天。','narr');
+  log('殿下站着的这些人，你一个也看不透。','narr');
+  S.officials.forEach(o=>log('【'+o.title+' '+o.name+'】'+R(SPEAK),'surf'));
+  S.consorts.forEach(c=>log('【'+c.rank+' '+c.name+'】'+R(['臣妾为陛下备了参汤。','陛下万岁万岁万万岁。','（她只是看了你一眼，便退下了。）']),'surf'));
+  log('— — —','sys');
+  // 首个事件
+  const first=R([
+    {t:'边关急报',d:'北狄游骑已过长城，边将请旨战和。'},
+    {t:'御史弹劾',d:'御史大夫当廷跪奏：户部堂官贪墨河工银两三十万，证据确凿。'}
+  ]);
+  log('<h4>【'+first.t+'】</h4>','danger');
+  log(first.d,'danger');
+  render();
+  openModal({title:'首个决断 · '+first.t,
+    body:'<p>'+first.d+'</p><p class="muted">满殿的目光都在你身上。你的第一个字，会被记住一辈子。</p>',
+    buttons:[
+      {label:'交给三司查办',fn:()=>{closeModal();applyEff({pol:+5,imp:+2});log('▶ 你说了句“查”。','narr');log('殿上有人松了口气，有人攥紧了笏板。','narr');S.recent.push('即位首议，着三司查办');endTurn(1);}},
+      {label:'暂压不发',fn:()=>{closeModal();applyEff({imp:-3,pol:-2});log('▶ 你把奏章压在了案头。','narr');log('有些事，压下去不等于没有。','narr');S.recent.push('即位首议，留中不发');endTurn(1);}},
+      {label:'亲自彻查',fn:()=>{closeModal();applyEff({imp:+5,pol:+1,peo:+2});log('▶ 你说：“朕亲自查。”','narr');log('殿上一片吸气声。太监的拂尘停在半空。','good');S.recent.push('即位首议，亲自主查');endTurn(1);}}
+    ]});
+}
+
+/* ---------- 绑定 ---------- */
+document.querySelectorAll('.tabs div').forEach(d=>{
+  d.onclick=()=>{ TAB=d.dataset.tab; renderPeople(); };
+});
+
+startScreen();
+
+})();
+</script>
+</body>
+</html>
